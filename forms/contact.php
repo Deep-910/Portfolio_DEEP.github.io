@@ -1,41 +1,58 @@
 <?php
-  /**
-  * Requires the "PHP Email Form" library
-  * The "PHP Email Form" library is available only in the pro version of the template
-  * The library should be uploaded to: vendor/php-email-form/php-email-form.php
-  * For more info and help: https://bootstrapmade.com/php-email-form/
-  */
+// Replace contact@example.com with your real receiving email address
+$receiving_email_address = 'deepbargal098contact@example.com';
 
-  // Replace contact@example.com with your real receiving email address
-  $receiving_email_address = 'deepbargal098contact@example.com';
+// Path to the PHP Email Form library
+$php_email_form_path = '../assets/vendor/php-email-form/php-email-form.php';
 
-  if( file_exists($php_email_form = '../assets/vendor/php-email-form/php-email-form.php' )) {
-    include( $php_email_form );
-  } else {
-    die( 'Unable to load the "PHP Email Form" Library!');
-  }
+// Check if the PHP Email Form library exists
+if (file_exists($php_email_form_path)) {
+    require_once($php_email_form_path);
+} else {
+    die('Unable to load the "PHP Email Form" Library!');
+}
 
-  $contact = new PHP_Email_Form;
-  $contact->ajax = true;
-  
-  $contact->to = $receiving_email_address;
-  $contact->from_name = $_POST['name'];
-  $contact->from_email = $_POST['email'];
-  $contact->subject = $_POST['subject'];
+$contact = new PHP_Email_Form();
 
-  // Uncomment below code if you want to use SMTP to send emails. You need to enter your correct SMTP credentials
-  /*
-  $contact->smtp = array(
+
+// Validate and sanitize form inputs
+$name = filter_input(INPUT_POST, 'name', FILTER_SANITIZE_STRING);
+$email = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL);
+$subject = filter_input(INPUT_POST, 'subject', FILTER_SANITIZE_STRING);
+$message = filter_input(INPUT_POST, 'message', FILTER_SANITIZE_STRING);
+
+// Validate email
+if (!$email) {
+    die('Invalid email address.');
+}
+
+$contact->to = $receiving_email_address;
+$contact->from_name = $name;
+$contact->from_email = $email;
+$contact->subject = $subject;
+
+// Uncomment below code if you want to use SMTP to send emails. You need to enter your correct SMTP credentials
+/*
+$contact->smtp = array(
     'host' => 'example.com',
     'username' => 'example',
     'password' => 'pass',
     'port' => '587'
-  );
-  */
+);
+*/
 
-  $contact->add_message( $_POST['name'], 'From');
-  $contact->add_message( $_POST['email'], 'Email');
-  $contact->add_message( $_POST['message'], 'Message', 10);
+$contact->add_message($name, 'From');
+$contact->add_message($email, 'Email');
+$contact->add_message($message, 'Message', 10);
 
-  echo $contact->send();
+try {
+    $send_result = $contact->send();
+    if ($send_result === true) {
+        echo 'Message sent successfully!';
+    } else {
+        echo 'Message could not be sent.';
+    }
+} catch (Exception $e) {
+    echo 'An error occurred: ' . $e->getMessage();
+}
 ?>
